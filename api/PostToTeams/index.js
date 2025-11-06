@@ -17,32 +17,17 @@ module.exports = async function (context, req) {
         return;
     }
 
-    // Wir formatieren die Nachricht als "Adaptive Card"
-    var card = {
-        "@type": "MessageCard",
-        "@context": "http://schema.org/extensions",
-        "themeColor": "0076D7",
-        "summary": headline,
-        "sections": [{
-            "activityTitle": headline,
-            "activitySubtitle": "Neuer KI-News-Beitrag",
-            "facts": [{
-                "name": "Quelle",
-                "value": url
-            }],
-            "markdown": true
-        }],
-        "potentialAction": [{
-            "@type": "OpenUri",
-            "name": "Link öffnen",
-            "targets": [{ "os": "default", "uri": url }]
-        }]
+    // !!! START DEBUGGING-TEST !!!
+    // Wir senden ein GANZ ECHTES Text-JSON, um die "Card" als Fehlerquelle auszuschließen.
+    var simpleMessage = {
+        "text": "TESTNACHRICHT --- Überschrift: " + headline + " --- URL: " + url
     };
+    // !!! ENDE DEBUGGING-TEST !!!
 
     try {
         var response = await fetch(TEAMS_WEBHOOK_URL, {
             method: 'POST',
-            body: JSON.stringify(card),
+            body: JSON.stringify(simpleMessage), // Wir senden die simple Nachricht
             headers: { 'Content-Type': 'application/json' }
         });
 
