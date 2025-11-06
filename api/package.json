@@ -1,0 +1,8 @@
+{
+  "name": "api-functions",
+  "version": "1.0.0",
+  "description": "Stellt node-fetch für die SWA-API bereit.",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
