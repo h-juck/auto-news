@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-News Einspeisung</title>
+    </head>
+<body>
+    <h2>Neuen KI-News-Link posten</h2>
+    <form id="newsForm">
+        <div style="margin-bottom: 10px;">
+            <label for="headline">Launige Überschrift:</label><br>
+            <input type="text" id="headline" style="width: 400px;" required>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label for="url">Link (URL):</label><br>
+            <input type="url" id="url" style="width: 400px;" required>
+        </div>
+        <button type="submit">An Teams senden</button>
+    </form>
+    <p id="status"></p>
+
+    <script>
+        const form = document.getElementById('newsForm');
+        const status = document.getElementById('status');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            status.textContent = 'Sende...';
+
+            const headline = document.getElementById('headline').value;
+            const url = document.getElementById('url').value;
+
+            try {
+                // Wichtig: Wir rufen unsere *eigene* Backend-API auf
+                const response = await fetch('/api/PostToTeams', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ headline, url })
+                });
+
+                if (response.ok) {
+                    status.textContent = 'Erfolgreich an Teams gesendet!';
+                    form.reset();
+                } else {
+                    throw new Error('Fehler beim Senden.');
+                }
+            } catch (error) {
+                status.textContent = 'Fehler: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
