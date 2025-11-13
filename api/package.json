@@ -1,8 +1,9 @@
 {
   "name": "api-functions",
   "version": "1.0.0",
-  "description": "API zum Schreiben in Blob Storage",
+  "description": "APIs fuer Teams und Blog",
   "dependencies": {
+    "node-fetch": "^2.6.7",
     "@azure/storage-blob": "^12.17.0"
   }
 }
