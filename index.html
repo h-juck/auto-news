@@ -33,7 +33,7 @@
 
             try {
                 // Wichtig: Wir rufen unsere *eigene* Backend-API auf
-                const response = await fetch('/api/PostToTeams', {
+                const response = await fetch('/api/AddPost', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ headline, url })
