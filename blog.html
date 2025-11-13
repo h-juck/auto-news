@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-News Blog</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .post { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .post:last-child { border-bottom: none; }
+        .post h2 { margin: 0 0 5px 0; }
+        .post h2 a { text-decoration: none; color: #0078d4; }
+        .post h2 a:hover { text-decoration: underline; }
+        .post p { margin: 0; font-size: 0.9em; color: #555; }
+        #posts-container { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>KI-News Blog</h1>
+    <div id="posts-container">
+        <p>Lade Posts...</p>
+    </div>
+
+    <script>
+        // ▼▼▼ HIER ANPASSEN ▼▼▼
+        // Ersetzen Sie [IHR_STORAGE_NAME] mit dem Namen Ihres Speicherkontos (z.B. "autonewsstorage176...").
+        const JSON_FILE_URL = "https://[IHR_STORAGE_NAME].blob.core.windows.net/content/posts.json";
+        // ▲▲▲ HIER ANPASSEN ▲▲▲
+
+        async function loadPosts() {
+            const container = document.getElementById('posts-container');
+            try {
+                // WICHTIG: "?cacheBust=" + new Date().getTime() zwingt den Browser, die Datei neu zu laden
+                const response = await fetch(JSON_FILE_URL + "?cacheBust=" + new Date().getTime());
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        container.innerHTML = "<p>Noch keine Posts vorhanden. Bitte erstellen Sie den ersten Eintrag.</p>";
+                        return;
+                    }
+                    throw new Error("Konnte posts.json nicht laden: " + response.statusText);
+                }
+                
+                const posts = await response.json();
+                
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = "<p>Noch keine Posts vorhanden.</p>";
+                    return;
+                }
+
+                // Container leeren
+                container.innerHTML = "";
+                
+                // Für jeden Post ein HTML-Element erstellen
+                posts.forEach(post => {
+                    const postDiv = document.createElement('div');
+                    postDiv.className = 'post';
+                    
+                    const headline = document.createElement('h2');
+                    const link = document.createElement('a');
+                    link.href = post.url;
+                    link.target = "_blank"; // In neuem Tab öffnen
+                    link.rel = "noopener noreferrer"; // Sicherheits-Attribut
+                    link.textContent = post.headline;
+                    headline.appendChild(link);
+                    
+                    const meta = document.createElement('p');
+                    meta.textContent = `Gepostet am: ${new Date(post.timestamp).toLocaleString('de-DE')}`;
+                    
+                    postDiv.appendChild(headline);
+                    postDiv.appendChild(meta);
+                    container.appendChild(postDiv);
+                });
+
+            } catch (error) {
+                container.innerHTML = `<p style="color: red;">Fehler beim Laden: ${error.message}</p>`;
+                console.error("Fehler:", error);
+            }
+        }
+        
+        // Posts beim Laden der Seite aufrufen
+        loadPosts();
+    </script>
+</body>
+</html>
