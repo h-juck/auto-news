@@ -3,82 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KI-News Blog</title>
+    <title>KI-News Feed</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 15px; }
-        .post { border-bottom: 1px solid #eee; padding: 15px 0; }
-        .post:last-child { border-bottom: none; }
-        .post h2 { margin: 0 0 5px 0; }
-        .post h2 a { text-decoration: none; color: #0078d4; }
-        .post h2 a:hover { text-decoration: underline; }
-        .post p { margin: 0; font-size: 0.9em; color: #555; }
-        #posts-container { margin-top: 20px; }
+        /* --- GRUNDLAGEN --- */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5; /* Modernes Hellgrau */
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+        }
+
+        /* --- GRID LAYOUT (RESPONSIVE) --- */
+        #posts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- DIE KARTE (BOX) --- */
+        .post-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Dezent */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden; /* Wichtig für den Glanz-Effekt */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(0,0,0,0.03);
+            cursor: pointer;
+            text-decoration: none; /* Da die ganze Karte ein Link sein kann */
+        }
+
+        /* --- HOVER EFFEKTE (BEWEGUNG & SCHATTEN) --- */
+        .post-card:hover {
+            transform: translateY(-8px) scale(1.02); /* Hoch & Größer */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15); /* Tieferer Schatten */
+            border-color: transparent;
+        }
+
+        /* --- HOVER EFFEKT (GLANZ / SHINE) --- */
+        .post-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+            transform: skewX(-25deg);
+            transition: 0.5s;
+            pointer-events: none;
+        }
+
+        .post-card:hover::before {
+            left: 150%; /* Glanz wandert einmal komplett durch */
+            transition: 0.7s ease-in-out;
+        }
+
+        /* --- TYPOGRAFIE IN DER KARTE --- */
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+        }
+        
+        /* Die URL in der Karte optisch andeuten */
+        .card-link-icon {
+            font-size: 0.9rem;
+            color: #0078d4;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            margin-top: auto; /* Drückt den Link nach unten */
+        }
+        
+        .card-link-icon::after {
+            content: "→";
+            margin-left: 5px;
+            transition: margin-left 0.2s;
+        }
+
+        .post-card:hover .card-link-icon::after {
+            margin-left: 10px; /* Pfeil bewegt sich bei Hover */
+        }
+
+        .card-meta {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        /* Loading State */
+        .loading { text-align: center; color: #666; font-style: italic; }
     </style>
 </head>
 <body>
-    <h1>KI-News Blog</h1>
+
+    <h1>🚀 KI-News Feed</h1>
+    
     <div id="posts-container">
-        <p>Lade Posts...</p>
+        <p class="loading">Lade Neuigkeiten...</p>
     </div>
 
     <script>
-        // ▼▼▼ HIER ANPASSEN ▼▼▼
-        // Ersetzen Sie [IHR_STORAGE_NAME] mit dem Namen Ihres Speicherkontos (z.B. "autonewsstorage176...").
+        // Deine URL ist jetzt fest eingebaut:
         const JSON_FILE_URL = "https://autonewsstorage.blob.core.windows.net/content/posts.json";
-        // ▲▲▲ HIER ANPASSEN ▲▲▲
 
         async function loadPosts() {
             const container = document.getElementById('posts-container');
             try {
-                // WICHTIG: "?cacheBust=" + new Date().getTime() zwingt den Browser, die Datei neu zu laden
-                const response = await fetch(JSON_FILE_URL + "?cacheBust=" + new Date().getTime());
+                // Cache-Busting um sicherzustellen, dass immer die neuesten News kommen
+                const response = await fetch(JSON_FILE_URL + "?cb=" + new Date().getTime());
                 
                 if (!response.ok) {
-                    if (response.status === 404) {
-                        container.innerHTML = "<p>Noch keine Posts vorhanden. Bitte erstellen Sie den ersten Eintrag.</p>";
+                    if(response.status === 404) {
+                        container.innerHTML = '<p class="loading">Noch keine News vorhanden.</p>';
                         return;
                     }
-                    throw new Error("Konnte posts.json nicht laden: " + response.statusText);
+                    throw new Error("Fehler beim Laden");
                 }
                 
                 const posts = await response.json();
                 
                 if (!posts || posts.length === 0) {
-                    container.innerHTML = "<p>Noch keine Posts vorhanden.</p>";
+                    container.innerHTML = '<p class="loading">Keine Einträge gefunden.</p>';
                     return;
                 }
 
-                // Container leeren
-                container.innerHTML = "";
+                container.innerHTML = ""; // Lade-Text entfernen
                 
-                // Für jeden Post ein HTML-Element erstellen
                 posts.forEach(post => {
-                    const postDiv = document.createElement('div');
-                    postDiv.className = 'post';
+                    // Wir machen die ganze Karte klickbar (a tag als Wrapper)
+                    const card = document.createElement('a');
+                    card.className = 'post-card';
+                    card.href = post.url;
+                    card.target = "_blank";
+                    card.rel = "noopener noreferrer";
+
+                    // Inhalt zusammenbauen
+                    // Datum formatieren
+                    const dateStr = new Date(post.timestamp).toLocaleDateString('de-DE', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'
+                    });
+
+                    card.innerHTML = `
+                        <div class="card-title">${post.headline}</div>
+                        <div class="card-link-icon">Artikel lesen</div>
+                        <div class="card-meta">Gepostet am ${dateStr} Uhr</div>
+                    `;
                     
-                    const headline = document.createElement('h2');
-                    const link = document.createElement('a');
-                    link.href = post.url;
-                    link.target = "_blank"; // In neuem Tab öffnen
-                    link.rel = "noopener noreferrer"; // Sicherheits-Attribut
-                    link.textContent = post.headline;
-                    headline.appendChild(link);
-                    
-                    const meta = document.createElement('p');
-                    meta.textContent = `Gepostet am: ${new Date(post.timestamp).toLocaleString('de-DE')}`;
-                    
-                    postDiv.appendChild(headline);
-                    postDiv.appendChild(meta);
-                    container.appendChild(postDiv);
+                    container.appendChild(card);
                 });
 
             } catch (error) {
-                container.innerHTML = `<p style="color: red;">Fehler beim Laden: ${error.message}</p>`;
-                console.error("Fehler:", error);
+                console.error(error);
+                container.innerHTML = `<p style="color:red; text-align:center;">Hoppla, da ist was schiefgelaufen beim Laden.</p>`;
             }
         }
         
-        // Posts beim Laden der Seite aufrufen
         loadPosts();
     </script>
 </body>
