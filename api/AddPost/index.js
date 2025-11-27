@@ -4,12 +4,13 @@
 
 const { BlobServiceClient } = require("@azure/storage-blob");
 
-const containerName = "content"; // Der Container, den wir erstellt haben
-const blobName = "posts.json";    // Unsere "Datenbank"-Datei
+const containerName = "content"; 
+const blobName = "posts.json";    
 
 async function getBlobClient(connectionString) {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-    return blobServiceClient.getContainerClient(containerName).getBlobClient(blobName);
+    // WICHTIG: Hier stand vorher .getBlobClient - jetzt .getBlockBlobClient
+    return blobServiceClient.getContainerClient(containerName).getBlockBlobClient(blobName);
 }
 
 module.exports = async function (context, req) {
@@ -36,11 +37,10 @@ module.exports = async function (context, req) {
             const downloadBlockBlobResponse = await blobClient.downloadToBuffer();
             posts = JSON.parse(downloadBlockBlobResponse.toString());
         } catch (error) {
-            // Wenn die Datei nicht existiert (z.B. beim ersten Mal), fangen wir mit einem leeren Array an.
-            context.log("posts.json nicht gefunden, erstelle neue Datei.");
+            context.log("posts.json nicht gefunden oder leer, erstelle neue Datei.");
         }
 
-        // 2. Neuen Post hinzufügen (oben, wie bei einem Blog)
+        // 2. Neuen Post hinzufügen
         posts.unshift({
             headline: headline,
             url: url,
@@ -48,8 +48,10 @@ module.exports = async function (context, req) {
         });
 
         // 3. Aktualisierte Liste zurückschreiben
-        const data = JSON.stringify(posts, null, 2); // "null, 2" macht es hübsch lesbar
-        await blobClient.upload(data, data.length, {
+        const data = JSON.stringify(posts, null, 2);
+        
+        // Jetzt funktioniert .upload(), weil blobClient ein BlockBlobClient ist
+        await blobClient.upload(data, Buffer.byteLength(data), {
             blobHTTPHeaders: { blobContentType: "application/json" }
         });
 
