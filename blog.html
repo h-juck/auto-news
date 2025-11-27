@@ -8,7 +8,7 @@
         /* --- GRUNDLAGEN --- */
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5; /* Modernes Hellgrau */
+            background-color: #f0f2f5;
             color: #333;
             margin: 0;
             padding: 40px 20px;
@@ -23,7 +23,7 @@
             letter-spacing: -1px;
         }
 
-        /* --- GRID LAYOUT (RESPONSIVE) --- */
+        /* --- GRID LAYOUT --- */
         #posts-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -37,26 +37,25 @@
             background: white;
             border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Dezent */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
-            overflow: hidden; /* Wichtig für den Glanz-Effekt */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             border: 1px solid rgba(0,0,0,0.03);
             cursor: pointer;
-            text-decoration: none; /* Da die ganze Karte ein Link sein kann */
+            text-decoration: none;
         }
 
-        /* --- HOVER EFFEKTE (BEWEGUNG & SCHATTEN) --- */
         .post-card:hover {
-            transform: translateY(-8px) scale(1.02); /* Hoch & Größer */
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15); /* Tieferer Schatten */
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
             border-color: transparent;
         }
 
-        /* --- HOVER EFFEKT (GLANZ / SHINE) --- */
+        /* Glanz-Effekt */
         .post-card::before {
             content: "";
             position: absolute;
@@ -71,11 +70,22 @@
         }
 
         .post-card:hover::before {
-            left: 150%; /* Glanz wandert einmal komplett durch */
+            left: 150%;
             transition: 0.7s ease-in-out;
         }
 
-        /* --- TYPOGRAFIE IN DER KARTE --- */
+        /* --- TYPOGRAFIE --- */
+        
+        /* NEU: Die Domain-Anzeige oben */
+        .card-domain {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
         .card-title {
             font-size: 1.25rem;
             font-weight: 700;
@@ -84,14 +94,13 @@
             margin: 0 0 15px 0;
         }
         
-        /* Die URL in der Karte optisch andeuten */
         .card-link-icon {
             font-size: 0.9rem;
             color: #0078d4;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            margin-top: auto; /* Drückt den Link nach unten */
+            margin-top: auto;
         }
         
         .card-link-icon::after {
@@ -101,7 +110,7 @@
         }
 
         .post-card:hover .card-link-icon::after {
-            margin-left: 10px; /* Pfeil bewegt sich bei Hover */
+            margin-left: 10px;
         }
 
         .card-meta {
@@ -112,7 +121,6 @@
             border-top: 1px solid #eee;
         }
 
-        /* Loading State */
         .loading { text-align: center; color: #666; font-style: italic; }
     </style>
 </head>
@@ -125,13 +133,12 @@
     </div>
 
     <script>
-        // Deine URL ist jetzt fest eingebaut:
+        // URL ist fest eingebaut
         const JSON_FILE_URL = "https://autonewsstorage.blob.core.windows.net/content/posts.json";
 
         async function loadPosts() {
             const container = document.getElementById('posts-container');
             try {
-                // Cache-Busting um sicherzustellen, dass immer die neuesten News kommen
                 const response = await fetch(JSON_FILE_URL + "?cb=" + new Date().getTime());
                 
                 if (!response.ok) {
@@ -149,23 +156,33 @@
                     return;
                 }
 
-                container.innerHTML = ""; // Lade-Text entfernen
+                container.innerHTML = "";
                 
                 posts.forEach(post => {
-                    // Wir machen die ganze Karte klickbar (a tag als Wrapper)
                     const card = document.createElement('a');
                     card.className = 'post-card';
                     card.href = post.url;
                     card.target = "_blank";
                     card.rel = "noopener noreferrer";
 
-                    // Inhalt zusammenbauen
+                    // --- NEU: Domain extrahieren ---
+                    let domain = "";
+                    try {
+                        // Holt z.B. "www.arxiv.org" und macht daraus "arxiv.org"
+                        const urlObj = new URL(post.url);
+                        domain = urlObj.hostname.replace('www.', '');
+                    } catch (e) {
+                        domain = "Link"; // Fallback falls URL komisch ist
+                    }
+
                     // Datum formatieren
                     const dateStr = new Date(post.timestamp).toLocaleDateString('de-DE', {
                         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'
                     });
 
+                    // HTML mit der neuen Domain-Zeile
                     card.innerHTML = `
+                        <div class="card-domain">🔗 ${domain}</div>
                         <div class="card-title">${post.headline}</div>
                         <div class="card-link-icon">Artikel lesen</div>
                         <div class="card-meta">Gepostet am ${dateStr} Uhr</div>
